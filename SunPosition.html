@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sun Position Web</title>
+  <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 10px 0;
+    }
+    canvas {
+      width: 90vw;
+      height: auto;
+      aspect-ratio: 5 / 7;
+      border: 1px solid #ccc;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sun Position</h1>
+  <canvas id="sunCanvas" width="500" height="700"></canvas>
+
+  <script>
+    const canvas = document.getElementById("sunCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const config = {
+      house: {
+        latitude: 45.55074586769627,
+        longitude: 9.1884181079518,
+        timezone: "Europe/Rome",
+        direction: 165,
+      },
+    };
+
+    const houseSize = 90;
+    const roofHeight = 18;
+    const sunRadius = 15;
+    const rayLength = 5;
+    const sunPathRadius = 200;
+
+    function drawScene() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const houseX = (canvas.width - houseSize) / 2;
+      const houseYSide = canvas.height - houseSize - 30;
+      const houseYTop = canvas.height / 2 - houseSize / 2 - 80;
+      const sunPathCenterX = canvas.width / 2;
+      const sunPathCenterYSide = houseYSide;
+      const sunPathCenterYTop = houseYTop + houseSize / 2;
+
+      const now = new Date();
+      const sunPos = SunCalc.getPosition(now, config.house.latitude, config.house.longitude);
+      const altitude = sunPos.altitude * 180 / Math.PI;
+      const azimuth = 180 + sunPos.azimuth * 180 / Math.PI;
+
+      drawHouseSide(houseX, houseYSide);
+      const [sunX1, sunY1] = drawSunSide(altitude, sunPathCenterX, sunPathCenterYSide);
+      drawLine(sunX1, sunY1, sunPathCenterX, sunPathCenterYSide);
+      drawText(`${altitude.toFixed(2)}°`, houseX - houseSize / 2 + 20, houseYSide - 30);
+
+      drawHouseTop(houseX, houseYTop);
+      const [sunX2, sunY2] = drawSunTop(azimuth - config.house.direction, sunPathCenterX, sunPathCenterYTop);
+      drawLine(sunX2, sunY2, sunPathCenterX, sunPathCenterYTop);
+      drawText(`${azimuth.toFixed(2)}°`, houseX - houseSize / 2 + 20, houseYTop - 30);
+    }
+
+    function drawHouseSide(houseX, houseYSide) {
+      ctx.strokeRect(houseX, houseYSide, houseSize, houseSize);
+      ctx.beginPath();
+      ctx.moveTo(houseX, houseYSide);
+      ctx.lineTo(houseX + houseSize, houseYSide);
+      ctx.lineTo(canvas.width / 2, houseYSide - roofHeight);
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    function drawHouseTop(houseX, houseYTop) {
+      ctx.strokeRect(houseX, houseYTop, houseSize / 2, houseSize);
+      ctx.strokeRect(houseX + houseSize / 2 - 2, houseYTop, houseSize / 2, houseSize);
+    }
+
+    function drawSunSide(angle, centerX, centerY) {
+      const x = centerX - sunPathRadius * Math.cos(angle * Math.PI / 180);
+      const y = centerY - sunPathRadius * Math.sin(angle * Math.PI / 180);
+      drawSun(x, y);
+      return [x, y];
+    }
+
+    function drawSunTop(angle, centerX, centerY) {
+      const x = centerX - sunPathRadius * Math.cos(angle * Math.PI / 180);
+      const y = centerY - sunPathRadius * Math.sin(angle * Math.PI / 180);
+      drawSun(x, y);
+
+      const sAngle = 180 - config.house.direction;
+      const sx = centerX - sunPathRadius * Math.cos(sAngle * Math.PI / 180);
+      const sy = centerY - sunPathRadius * Math.sin(sAngle * Math.PI / 180);
+      ctx.fillStyle = "gray";
+      ctx.fillText("S", sx + 10, sy - 10);
+
+      return [x, y];
+    }
+
+    function drawSun(x, y) {
+      ctx.beginPath();
+      ctx.arc(x, y, sunRadius, 0, 2 * Math.PI);
+      ctx.fillStyle = "orange";
+      ctx.fill();
+
+      for (let i = 0; i < 8; i++) {
+        const angle = (Math.PI / 4) * i;
+        const x1 = x + sunRadius * Math.cos(angle);
+        const y1 = y + sunRadius * Math.sin(angle);
+        const x2 = x + (sunRadius + rayLength) * Math.cos(angle);
+        const y2 = y + (sunRadius + rayLength) * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = "orange";
+        ctx.stroke();
+      }
+    }
+
+    function drawLine(x1, y1, x2, y2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = "gray";
+      ctx.stroke();
+    }
+
+    function drawText(text, x, y) {
+      ctx.fillStyle = "gray";
+      ctx.font = "26px sans-serif";
+      ctx.fillText(text, x, y);
+    }
+
+    drawScene();
+    setInterval(drawScene, 1000);
+  </script>
+</body>
+</html>
