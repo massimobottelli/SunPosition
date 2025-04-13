@@ -23,23 +23,39 @@
       aspect-ratio: 5 / 7;
       border: 1px solid #ccc;
       display: block;
-      margin: 0 auto 20px auto;
+      margin: 10px auto;
+    }
+    .controls {
+      margin-bottom: 10px;
+    }
+    .controls label {
+      display: inline-block;
+      margin: 5px 10px;
+    }
+    .controls input {
+      width: 80px;
+      padding: 4px;
     }
   </style>
 </head>
 <body>
   <h1>Sun Position</h1>
+  <div class="controls">
+    <label>Lat: <input type="number" id="latInput" step="any" value="45.55074586769627"></label>
+    <label>Lon: <input type="number" id="lonInput" step="any" value="9.1884181079518"></label>
+    <label>Dir: <input type="number" id="dirInput" step="any" value="165"></label>
+    <button onclick="updateConfig()">Aggiorna</button>
+  </div>
   <canvas id="sunCanvas" width="500" height="700"></canvas>
 
   <script>
-    const canvas = document.getElementById("sunCanvas");
-    const ctx = canvas.getContext("2d");
+    let canvasElement = document.getElementById("sunCanvas");
+    let context = canvasElement.getContext("2d");
 
-    const config = {
+    let config = {
       house: {
         latitude: 45.55074586769627,
         longitude: 9.1884181079518,
-        timezone: "Europe/Rome",
         direction: 165,
       },
     };
@@ -50,13 +66,19 @@
     const rayLength = 5;
     const sunPathRadius = 200;
 
-    function drawScene() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function updateConfig() {
+      config.house.latitude = parseFloat(document.getElementById("latInput").value);
+      config.house.longitude = parseFloat(document.getElementById("lonInput").value);
+      config.house.direction = parseFloat(document.getElementById("dirInput").value);
+    }
 
-      const houseX = (canvas.width - houseSize) / 2;
-      const houseYSide = canvas.height - houseSize - 30;
-      const houseYTop = canvas.height / 2 - houseSize / 2 - 80;
-      const sunPathCenterX = canvas.width / 2;
+    function drawScene() {
+      context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+      const houseX = (canvasElement.width - houseSize) / 2;
+      const houseYSide = canvasElement.height - houseSize - 30;
+      const houseYTop = canvasElement.height / 2 - houseSize / 2 - 80;
+      const sunPathCenterX = canvasElement.width / 2;
       const sunPathCenterYSide = houseYSide;
       const sunPathCenterYTop = houseYTop + houseSize / 2;
 
@@ -77,18 +99,18 @@
     }
 
     function drawHouseSide(houseX, houseYSide) {
-      ctx.strokeRect(houseX, houseYSide, houseSize, houseSize);
-      ctx.beginPath();
-      ctx.moveTo(houseX, houseYSide);
-      ctx.lineTo(houseX + houseSize, houseYSide);
-      ctx.lineTo(canvas.width / 2, houseYSide - roofHeight);
-      ctx.closePath();
-      ctx.stroke();
+      context.strokeRect(houseX, houseYSide, houseSize, houseSize);
+      context.beginPath();
+      context.moveTo(houseX, houseYSide);
+      context.lineTo(houseX + houseSize, houseYSide);
+      context.lineTo(canvasElement.width / 2, houseYSide - roofHeight);
+      context.closePath();
+      context.stroke();
     }
 
     function drawHouseTop(houseX, houseYTop) {
-      ctx.strokeRect(houseX, houseYTop, houseSize / 2, houseSize);
-      ctx.strokeRect(houseX + houseSize / 2 - 2, houseYTop, houseSize / 2, houseSize);
+      context.strokeRect(houseX, houseYTop, houseSize / 2, houseSize);
+      context.strokeRect(houseX + houseSize / 2 - 2, houseYTop, houseSize / 2, houseSize);
     }
 
     function drawSunSide(angle, centerX, centerY) {
@@ -106,17 +128,17 @@
       const sAngle = 180 - config.house.direction;
       const sx = centerX - sunPathRadius * Math.cos(sAngle * Math.PI / 180);
       const sy = centerY - sunPathRadius * Math.sin(sAngle * Math.PI / 180);
-      ctx.fillStyle = "gray";
-      ctx.fillText("S", sx + 10, sy - 10);
+      context.fillStyle = "gray";
+      context.fillText("S", sx + 10, sy - 10);
 
       return [x, y];
     }
 
     function drawSun(x, y) {
-      ctx.beginPath();
-      ctx.arc(x, y, sunRadius, 0, 2 * Math.PI);
-      ctx.fillStyle = "orange";
-      ctx.fill();
+      context.beginPath();
+      context.arc(x, y, sunRadius, 0, 2 * Math.PI);
+      context.fillStyle = "orange";
+      context.fill();
 
       for (let i = 0; i < 8; i++) {
         const angle = (Math.PI / 4) * i;
@@ -124,26 +146,26 @@
         const y1 = y + sunRadius * Math.sin(angle);
         const x2 = x + (sunRadius + rayLength) * Math.cos(angle);
         const y2 = y + (sunRadius + rayLength) * Math.sin(angle);
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "orange";
-        ctx.stroke();
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.strokeStyle = "orange";
+        context.stroke();
       }
     }
 
     function drawLine(x1, y1, x2, y2) {
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.strokeStyle = "gray";
-      ctx.stroke();
+      context.beginPath();
+      context.moveTo(x1, y1);
+      context.lineTo(x2, y2);
+      context.strokeStyle = "gray";
+      context.stroke();
     }
 
     function drawText(text, x, y) {
-      ctx.fillStyle = "gray";
-      ctx.font = "26px sans-serif";
-      ctx.fillText(text, x, y);
+      context.fillStyle = "gray";
+      context.font = "32px sans-serif";
+      context.fillText(text, x, y);
     }
 
     drawScene();
